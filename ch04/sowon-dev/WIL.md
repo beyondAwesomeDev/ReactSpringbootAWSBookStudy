@@ -77,7 +77,8 @@ JWT에게 전자사명이란 {헤더}.{페이로드}와 시크릿키를 이요�
 [추가 설명](https://sowon-dev.github.io/2022/07/22/220722authenticationVSauthorization/)
 
 <br><br><br>
-# 스프링 시큐리티가 필요한 이유?
+# 스프링 시큐리티 설정
+## 스프링 시큐리티가 필요한 이유?
 API 실행시마다 사용자 인증을 해주는 부분을 스프링 시큐리티가 대신해줄수있다.
 - 스프링 시큐리티란? 서블릿 필터의 집합
 - 서블릿 필터이란? 서블릿 실행 전 에 실행되는 클래스들로 디스패처 서블릿 실행되기 전에 항상 실행됨.
@@ -85,3 +86,50 @@ API 실행시마다 사용자 인증을 해주는 부분을 스프링 시큐리�
 여기서 개발자가 할 일은? 서블릿 필터를 구현하고 서블릿 필터를 서블릿 컨테이너가 실행하도록 설정해주기!
 그런데 서블릿 필터가 1개일 필요는 없다. 하나의 클래스에 모든 필터를 다 담으면 크기가 어마어마해질 것이다. 따라서 기능에 따라 다른 서블릿 필터를 작성하는 것이 좋다. 
 이 서블릿 필터들을 FilterChain을 통해 연쇄적으로 순서대로 실행시킬수 있음.
+
+<br><br><br>
+## HttpSecurity란?
+- WebSecurityConfig.java 파일을 생성해서 스프링시큐리티 설정해야 함
+- 시큐리티 설정을 위한 오브젝트임. 
+- 이 오브젝트를 통해 web.xml 대신 HttpSecurity를 이용해 시큐리티 관련 설정함.
+- 스프링시큐리티에 JwtAuthenticationFilter를 사용하라고 알려줘야함
+- [코드 출처 및 원본 바로가기](https://github.com/fsoftwareengineer/todo-application/blob/main/4.3-Spring_Security_Integration/demo/src/main/java/com/example/demo/config/WebSecurityConfig.java)
+
+```java
+@EnableWebSecurity
+@Slf4j
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+	@Autowired
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		// http 시큐리티 빌더
+		http.cors() // WebMvcConfig에서 이미 설정했으므로 기본 cors 설정.
+				.and()
+				.csrf()// csrf는 현재 사용하지 않으므로 disable
+					.disable()
+				.httpBasic()// token을 사용하므로 basic 인증 disable
+					.disable()
+				.sessionManagement()  // session 기반이 아님을 선언
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+				.and()
+				.authorizeRequests() // /와 /auth/** 경로는 인증 안해도 됨.
+					.antMatchers("/", "/auth/**").permitAll()
+				.anyRequest() // /와 /auth/**이외의 모든 경로는 인증 해야됨.
+					.authenticated();
+
+		// filter 등록.
+		// 매 리퀘스트마다
+		// CorsFilter 실행한 후에
+		// jwtAuthenticationFilter 실행한다.
+		http.addFilterAfter(
+						jwtAuthenticationFilter,
+						CorsFilter.class
+		);
+	}
+}
+```
+
+addFilterAfter()메서드는 JwtAuthenticationFilter를 CorsFilter 이후에 실행하라고 설정하는 것임. 즉, 실행순서는 `CorsFilter -> JwtAuthenticationFilter` 이 된다. 반드시 이 순서로 실행해야하는 것은 아니다. 저자가 보기에 적당해보여서 그렇게 설정한 것이다.
