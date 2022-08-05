@@ -133,3 +133,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 ```
 
 addFilterAfter()메서드는 JwtAuthenticationFilter를 CorsFilter 이후에 실행하라고 설정하는 것임. 즉, 실행순서는 `CorsFilter -> JwtAuthenticationFilter` 이 된다. 반드시 이 순서로 실행해야하는 것은 아니다. 저자가 보기에 적당해보여서 그렇게 설정한 것이다.
+
+
+<br><br><br>
+## WebSecurityConfigurerAdapter가 deprecated가 되었는데 어떻게 할까?
+2022년 2월 2일 스프링 업데이트 이후 WebSecurityConfigurerAdapter방식이 아닌 @Bean 등록방식으로 하길 권장하고 있다.
+
+- [pjh612님의 Deprecated된 WebSecurityConfigurerAdapter, 어떻게 대처하지? 글](https://velog.io/@pjh612/Deprecated%EB%90%9C-WebSecurityConfigurerAdapter-%EC%96%B4%EB%96%BB%EA%B2%8C-%EB%8C%80%EC%B2%98%ED%95%98%EC%A7%80)
+- [ppoble님의 The type WebSecurityConfigurerAdapter is deprecated 글](https://ppoble.tistory.com/37)
+
+위 글을 읽고 코드를 다시 짜보았다.
+
+```java
+```
+
+<br><br><br>
+## 토큰 response
+- 정상적인 토큰이면 200 OK 리턴
+- 위조된 토큰이면 403 Forbidden 리턴
